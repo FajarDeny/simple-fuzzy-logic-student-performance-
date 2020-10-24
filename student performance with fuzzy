@@ -1,0 +1,41 @@
+import numpy as np
+import skfuzzy as fuzz
+from skfuzzy import control as ctrl
+
+kepintaran = ctrl.Antecedent(np.arange(0,4.1,0.1), 'kepintaran')
+rajin = ctrl.Antecedent(np.arange(0,10.1,0.1), 'rajin')
+performa = ctrl.Consequent(np.arange(0,101,1), 'performa')
+
+kepintaran['sangat_bodoh']=fuzz.trapmf(kepintaran.universe,[0, 0, 2, 2.5])
+kepintaran['bodoh']=fuzz.trimf(kepintaran.universe,[2, 2.5, 3])
+kepintaran['pintar']=fuzz.trimf(kepintaran.universe,[2.5, 3, 3.5])
+kepintaran['sangat_pintar']=fuzz.trapmf(kepintaran.universe,[3, 3.5, 4, 4])
+
+rajin['sangatrajin']=fuzz.trapmf(rajin.universe,[0,0,1,4])
+rajin['agakrajin']=fuzz.trimf(rajin.universe,[1, 5, 9])
+rajin['malas']=fuzz.trapmf(rajin.universe,[6, 9, 10, 10])
+
+performa['buruk']=fuzz.trapmf(performa.universe,[0, 0, 25, 75])
+performa['baik']=fuzz.trapmf(performa.universe,[25, 75, 100, 100])
+
+kepintaran.view()
+performa.view()
+rajin.view()
+
+rule1 = ctrl.Rule(kepintaran['sangat_bodoh'] | kepintaran['bodoh'] | rajin['malas'] | rajin['agakrajin'], performa ['buruk'])
+rule1.view()
+
+rule2 = ctrl.Rule(kepintaran['pintar'] & rajin ['sangatrajin'] | kepintaran ['sangat_pintar'] | rajin['sangatrajin'], performa ['baik'])
+rule2.view()
+
+performapoint_ctrl_FajarDeny = ctrl.ControlSystem([rule1,rule2])
+performapoint = ctrl.ControlSystemSimulation(performapoint_ctrl_FajarDeny)
+
+performapoint.input['kepintaran']=3.6
+performapoint.input['rajin']=8
+
+performapoint.compute()
+
+
+performa.view(sim=performapoint)
+print("performa : ",performapoint.output['performa'])
